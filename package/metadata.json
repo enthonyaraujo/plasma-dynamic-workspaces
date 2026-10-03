@@ -1,0 +1,22 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "enthonyaraujo01@gmail.com",
+                "Name": "Enthony Araujo de Oliveira"
+            }
+        ],
+        "Category": "Windows and Tasks",
+        "Description": "Hyprland-style workspace indicator: shows only the active virtual desktop and the ones that contain windows",
+        "Description[pt_BR]": "Indicador de workspaces no estilo Hyprland: mostra apenas o desktop virtual ativo e os que contêm janelas",
+        "EnabledByDefault": true,
+        "Icon": "virtual-desktops",
+        "Id": "com.github.enthony.dynamicworkspaces",
+        "License": "GPL-2.0-or-later",
+        "Name": "Dynamic Workspaces",
+        "Name[pt_BR]": "Workspaces Dinâmicas",
+        "Version": "1.0.0"
+    },
+    "KPackageStructure": "Plasma/Applet",
+    "X-Plasma-API-Minimum-Version": "6.0"
+}

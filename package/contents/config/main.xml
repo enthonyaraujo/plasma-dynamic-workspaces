@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0
+                          http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+    <kcfgfile name=""/>
+
+    <group name="General">
+        <!-- Leading workspaces that stay visible even when empty (Hyprland "persistent"). -->
+        <entry name="persistentWorkspaces" type="Int">
+            <default>1</default>
+            <min>0</min>
+            <max>20</max>
+        </entry>
+        <!-- Only count windows located on the screen that hosts this widget. -->
+        <entry name="filterByScreen" type="Bool">
+            <default>false</default>
+        </entry>
+    </group>
+</kcfg>

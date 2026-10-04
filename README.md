@@ -62,13 +62,25 @@ kde-workspace/
 
 ## Instalação
 
-### Pré-requisitos
-- KDE Plasma 6 (testado no Plasma 6.6.4 / Qt 6.10).
-- Pacote de ferramentas do Plasma (`kpackagetool6` e `plasma-workspace`).
+### Instalação Rápida (Script Automatizado)
 
-### Instalar localmente para o seu usuário
+Você pode instalar o widget e configurar automaticamente os atalhos `Win+1..9` para alternar entre as workspaces executando o script incluído:
 
-Execute a partir da raiz do repositório:
+```bash
+./install.sh
+```
+
+O script:
+1. Instala (ou atualiza) o widget no perfil do usuário (`~/.local/share/plasma/plasmoids/`).
+2. Libera os atalhos `Win+1..9` que por padrão vêm presos à barra de tarefas.
+3. Atribui `Win+1..9` para alternar diretamente entre as áreas de trabalho virtuais no KWin.
+4. Recarrega os serviços de atalhos do Plasma.
+
+---
+
+### Instalação Manual via `kpackagetool6`
+
+Caso prefira fazer manualmente a partir da raiz do repositório:
 
 ```bash
 # Instalação inicial

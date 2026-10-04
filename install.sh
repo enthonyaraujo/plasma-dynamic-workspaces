@@ -51,18 +51,18 @@ for i in {1..10}; do
     kwriteconfig6 --file kglobalshortcutsrc --group plasmashell --key "activate task manager entry $i" "none,none,Activate Task Manager Entry $i"
 done
 
-# 3.2 Associa Win+1..0 para alternar workspaces e Win+Shift+1..0 para mover janelas no KWin
-echo "  -> Mapeando Win+1..0 para alternar e Win+Shift+1..0 para mover janelas no KWin..."
+# 3.2 Associa Win+1..0 para alternar workspaces no KWin
+echo "  -> Mapeando Win+1..0 para alternar workspaces no KWin..."
 for i in {1..10}; do
     num=$(( i == 10 ? 0 : i ))
     kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Switch to Desktop $i" "Meta+$num,none,Switch to Desktop $i"
-    kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Window to Desktop $i" "Meta+Shift+$num,none,Window to Desktop $i"
 done
 
 # 4. Aplicar / Recarregar configurações imediatamente na sessão ativa
 echo ""
 echo "[4/5] Aplicando atalhos em tempo real no KWin/Plasma..."
 python3 - <<'EOF'
+import subprocess
 import gi
 from gi.repository import Gio, GLib
 
@@ -71,8 +71,24 @@ META = 0x10000000
 SHIFT = 0x02000000
 KEY_0 = 0x30
 
+# Mapeamento de símbolos quando Shift é pressionado com números no Wayland (layout US e ABNT2):
+# No Wayland/XKB, caracteres não-alfabéticos consomem o Shift e o KWin despacha o evento
+# como Meta + Símbolo (ex: Meta+! ao invés de Meta+Shift+1). Mapeamos ambos os formatos para total compatibilidade.
+symbols_data = {
+    1: {"num": 1, "syms": [(0x21, "!")]},
+    2: {"num": 2, "syms": [(0x40, "@")]},
+    3: {"num": 3, "syms": [(0x23, "#")]},
+    4: {"num": 4, "syms": [(0x24, "$")]},
+    5: {"num": 5, "syms": [(0x25, "%")]},
+    6: {"num": 6, "syms": [(0x5e, "^"), (0xa8, "¨")]},
+    7: {"num": 7, "syms": [(0x26, "&")]},
+    8: {"num": 8, "syms": [(0x2a, "*")]},
+    9: {"num": 9, "syms": [(0x28, "(")]},
+    10: {"num": 0, "syms": [(0x29, ")")]},
+}
+
 for i in range(1, 11):
-    num = 0 if i == 10 else i
+    num = symbols_data[i]["num"]
 
     # Desativa atalho do task manager
     action_plasma = ['plasmashell', f'activate task manager entry {i}', 'plasmashell', f'Activate Task Manager Entry {i}']
@@ -103,20 +119,39 @@ for i in range(1, 11):
         None
     )
 
-    # Atribui Win+Shift+num para mover janela ativa para desktop no KWin
-    key_code_move = META | SHIFT | (KEY_0 + num)
+    # Prepara todas as combinações possíveis para mover janelas (Win+Shift+num e Win+símbolo)
+    codes = [META | SHIFT | (KEY_0 + num)]
+    strings = [f'Meta+Shift+{num}']
+    for code, char in symbols_data[i]["syms"]:
+        codes.append(META | code)
+        codes.append(META | SHIFT | code)
+        strings.append(f'Meta+{char}')
+        strings.append(f'Meta+Shift+{char}')
+
+    # Deduplica mantendo a ordem
+    seen_c = set()
+    uniq_codes = [c for c in codes if not (c in seen_c or seen_c.add(c))]
+    seen_s = set()
+    uniq_strings = [s for s in strings if not (s in seen_s or seen_s.add(s))]
+
+    # Registra no KWin em tempo real via D-Bus
+    dbus_keys = [([c],) for c in uniq_codes]
     action_move = ['kwin', f'Window to Desktop {i}', 'KWin', f'Window to Desktop {i}']
     bus.call_sync(
         'org.kde.kglobalaccel',
         '/kglobalaccel',
         'org.kde.KGlobalAccel',
         'setShortcutKeys',
-        GLib.Variant('(asa(ai)u)', (action_move, [([key_code_move],)], 4)),
+        GLib.Variant('(asa(ai)u)', (action_move, dbus_keys, 4)),
         GLib.VariantType('(a(ai))'),
         Gio.DBusCallFlags.NONE,
         -1,
         None
     )
+
+    # Persiste no kglobalshortcutsrc com suporte a múltiplas variantes separadas por tab
+    shortcut_str = '\t'.join(uniq_strings) + f',none,Window to Desktop {i}'
+    subprocess.run(['kwriteconfig6', '--file', 'kglobalshortcutsrc', '--group', 'kwin', '--key', f'Window to Desktop {i}', shortcut_str])
 EOF
 
 # 5. Reiniciar o Plasmashell para recarregar o widget atualizado na barra

@@ -31,9 +31,9 @@ import subprocess
 try:
     cmd = ['qdbus-qt6', 'org.kde.KWin', '/VirtualDesktopManager', 'org.kde.KWin.VirtualDesktopManager.count']
     count = int(subprocess.check_output(cmd).decode().strip())
-    if count < 5:
-        print(f"  -> Apenas {count} desktop(s) detectado(s). Criando até 5 desktops para navegação estilo Hyprland...")
-        for i in range(count, 5):
+    if count < 10:
+        print(f"  -> Apenas {count} desktop(s) detectado(s). Criando até 10 desktops para navegação estilo Hyprland...")
+        for i in range(count, 10):
             subprocess.run(['qdbus-qt6', 'org.kde.KWin', '/VirtualDesktopManager', 'org.kde.KWin.VirtualDesktopManager.createDesktop', str(i), f'Desktop {i+1}'])
     else:
         print(f"  -> {count} desktops virtuais detectados.")
@@ -43,18 +43,20 @@ EOF
 
 # 3. Configuração de Atalhos (Estilo Hyprland)
 echo ""
-echo "[3/5] Configurando atalhos de teclado (Win+1..9)..."
+echo "[3/5] Configurando atalhos de teclado (Win+1..0 e Win+Shift+1..0)..."
 
-# 2.1 Desativa os atalhos Win+1..9 da barra de tarefas (plasmashell)
-echo "  -> Liberando atalhos Win+1..9 da barra de tarefas..."
-for i in {1..9}; do
+# 3.1 Desativa os atalhos Win+1..0 da barra de tarefas (plasmashell)
+echo "  -> Liberando atalhos Win+1..0 da barra de tarefas..."
+for i in {1..10}; do
     kwriteconfig6 --file kglobalshortcutsrc --group plasmashell --key "activate task manager entry $i" "none,none,Activate Task Manager Entry $i"
 done
 
-# 2.2 Associa Win+1..9 para alternar diretamente entre os Desktops Virtuais no KWin
-echo "  -> Mapeando Win+1..9 para trocar de workspace no KWin..."
-for i in {1..9}; do
-    kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Switch to Desktop $i" "Meta+$i,none,Switch to Desktop $i"
+# 3.2 Associa Win+1..0 para alternar workspaces e Win+Shift+1..0 para mover janelas no KWin
+echo "  -> Mapeando Win+1..0 para alternar e Win+Shift+1..0 para mover janelas no KWin..."
+for i in {1..10}; do
+    num=$(( i == 10 ? 0 : i ))
+    kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Switch to Desktop $i" "Meta+$num,none,Switch to Desktop $i"
+    kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Window to Desktop $i" "Meta+Shift+$num,none,Window to Desktop $i"
 done
 
 # 4. Aplicar / Recarregar configurações imediatamente na sessão ativa
@@ -66,9 +68,12 @@ from gi.repository import Gio, GLib
 
 bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
 META = 0x10000000
+SHIFT = 0x02000000
 KEY_0 = 0x30
 
-for i in range(1, 10):
+for i in range(1, 11):
+    num = 0 if i == 10 else i
+
     # Desativa atalho do task manager
     action_plasma = ['plasmashell', f'activate task manager entry {i}', 'plasmashell', f'Activate Task Manager Entry {i}']
     bus.call_sync(
@@ -83,15 +88,30 @@ for i in range(1, 10):
         None
     )
 
-    # Atribui Win+i para trocar de desktop no KWin
-    key_code = META | (KEY_0 + i)
-    action_kwin = ['kwin', f'Switch to Desktop {i}', 'KWin', f'Switch to Desktop {i}']
+    # Atribui Win+num para trocar de desktop no KWin
+    key_code_switch = META | (KEY_0 + num)
+    action_switch = ['kwin', f'Switch to Desktop {i}', 'KWin', f'Switch to Desktop {i}']
     bus.call_sync(
         'org.kde.kglobalaccel',
         '/kglobalaccel',
         'org.kde.KGlobalAccel',
         'setShortcutKeys',
-        GLib.Variant('(asa(ai)u)', (action_kwin, [([key_code],)], 4)),
+        GLib.Variant('(asa(ai)u)', (action_switch, [([key_code_switch],)], 4)),
+        GLib.VariantType('(a(ai))'),
+        Gio.DBusCallFlags.NONE,
+        -1,
+        None
+    )
+
+    # Atribui Win+Shift+num para mover janela ativa para desktop no KWin
+    key_code_move = META | SHIFT | (KEY_0 + num)
+    action_move = ['kwin', f'Window to Desktop {i}', 'KWin', f'Window to Desktop {i}']
+    bus.call_sync(
+        'org.kde.kglobalaccel',
+        '/kglobalaccel',
+        'org.kde.KGlobalAccel',
+        'setShortcutKeys',
+        GLib.Variant('(asa(ai)u)', (action_move, [([key_code_move],)], 4)),
         GLib.VariantType('(a(ai))'),
         Gio.DBusCallFlags.NONE,
         -1,
@@ -123,4 +143,5 @@ echo "=========================================="
 echo ""
 echo "Próximos passos:"
 echo "1. Se o widget já estava no painel superior, ele foi recarregado e agora se ajusta perfeitamente à barra (sem cortes)."
-echo "2. Pressione Win+1, Win+2, Win+3... para testar a troca de workspaces no indicador!"
+echo "2. Pressione Win+1..9 e Win+0 para testar a troca de workspaces no indicador (1 a 10)!"
+echo "3. Pressione Win+Shift+1..9 e Win+Shift+0 para mover a janela ativa para outra workspace!"

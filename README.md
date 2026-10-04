@@ -64,7 +64,7 @@ kde-workspace/
 
 ### Instalação Rápida (Script Automatizado)
 
-Você pode instalar o widget e configurar automaticamente os atalhos `Win+1..9` para alternar entre as workspaces executando o script incluído:
+Você pode instalar o widget e configurar automaticamente os atalhos `Win+1..0` (alternar workspace) e `Win+Shift+1..0` (mover janela ativa) para até 10 workspaces executando o script incluído:
 
 ```bash
 ./install.sh
@@ -72,9 +72,11 @@ Você pode instalar o widget e configurar automaticamente os atalhos `Win+1..9` 
 
 O script:
 1. Instala (ou atualiza) o widget no perfil do usuário (`~/.local/share/plasma/plasmoids/`).
-2. Libera os atalhos `Win+1..9` que por padrão vêm presos à barra de tarefas.
-3. Atribui `Win+1..9` para alternar diretamente entre as áreas de trabalho virtuais no KWin.
-4. Recarrega os serviços de atalhos do Plasma.
+2. Garante a criação de até 10 desktops virtuais no KWin.
+3. Libera os atalhos `Win+1..0` da barra de tarefas do Plasma.
+4. Atribui `Win+1..9` e `Win+0` para alternar diretamente entre as 10 workspaces.
+5. Atribui `Win+Shift+1..9` e `Win+Shift+0` para mover a janela ativa para qualquer uma das 10 workspaces.
+6. Aplica as configurações em tempo real na sessão ativa via D-Bus e reinicia o Plasmashell.
 
 ---
 
@@ -116,13 +118,14 @@ plasmawindowed com.github.enthony.dynamicworkspaces
 
 *(Nota: se o pacote de desenvolvimento `plasma-sdk` estiver instalado no seu sistema, o comando `plasmoidviewer -a com.github.enthony.dynamicworkspaces` também pode ser utilizado).*
 
-### 2. Testar troca dinâmica de workspaces
+### 2. Testar troca dinâmica de workspaces e movimentação de janelas
 1. Abra o widget (ou adicione-o ao seu painel).
 2. Com apenas a workspace 1 em uso, somente o botão `[1]` estará visível.
-3. Pressione `Meta+2` (ou use atalhos para ir ao Desktop 2): o botão `[2]` aparecerá em destaque e o `[1]` ficará esmaecido.
+3. Pressione `Meta+2` (ou use os atalhos `Win+1..0`): o botão `[2]` aparecerá em destaque e o `[1]` ficará esmaecido.
 4. Pressione `Meta+3`: o botão `[2]` desaparecerá automaticamente e o `[3]` estará ativo.
 5. Abra uma janela no Desktop 2 (ex.: terminal ou editor de texto) e volte para o Desktop 1 ou 3: o botão `[2]` permanecerá visível indicando que há janelas ativas naquele desktop.
-6. Clique diretamente em qualquer botão do widget para trocar de desktop.
+6. Pressione `Win+Shift+n` (onde `n` é de 1 a 0, correspondendo aos desktops 1 a 10) com uma janela focada para movê-la para a workspace desejada.
+7. Clique diretamente em qualquer botão do widget com o mouse para trocar de desktop.
 
 ---
 

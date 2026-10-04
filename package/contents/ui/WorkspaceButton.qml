@@ -22,31 +22,27 @@ Item {
     property bool occupied: false
     property bool shown: true
     property bool vertical: false
+    property real panelThickness: 24
 
     signal activated()
 
     // Opacity levels: active > inactive with windows > persistent but empty.
-    readonly property real targetOpacity: active ? 1.0 : (occupied ? 0.6 : 0.35)
+    readonly property real targetOpacity: active ? 1.0 : (occupied ? 0.7 : 0.4)
 
-    readonly property real thickness: vertical ? width : height
-    readonly property real pillThickness: Math.max(0, Math.min(thickness - 2 * Kirigami.Units.smallSpacing,
-                                                                Kirigami.Units.iconSizes.medium))
-    readonly property real pillLength: Math.max(pillThickness,
-                                                labelItem.implicitWidth + 3 * Kirigami.Units.smallSpacing)
+    // Calculate pill thickness from the panel thickness with safety margins.
+    // For a 24px panel, pillThickness is 20px, leaving 2px top/bottom margin.
+    readonly property real effectivePanelThickness: panelThickness > 0 ? panelThickness : (vertical ? width : height)
+    readonly property real safePanelThickness: effectivePanelThickness > 0 ? effectivePanelThickness : Kirigami.Units.gridUnit * 1.5
+    readonly property real pillThickness: Math.max(16, Math.min(safePanelThickness - 4, Kirigami.Units.gridUnit * 1.5))
+    readonly property real pillLength: Math.max(pillThickness, labelItem.implicitWidth + 2 * Kirigami.Units.smallSpacing)
 
     visible: shown
-    // While hidden the opacity rests at 0, so showing the item fades it in.
-    opacity: shown ? (mouseArea.containsMouse && !active ? Math.min(1, targetOpacity + 0.2) : targetOpacity) : 0
+    opacity: shown ? (mouseArea.containsMouse && !active ? Math.min(1.0, targetOpacity + 0.25) : targetOpacity) : 0
 
-    width: shown ? (vertical ? Kirigami.Units.gridUnit * 2 : pillLength) : 0
-    height: shown ? (vertical ? pillLength : Kirigami.Units.gridUnit * 2) : 0
+    width: shown ? (vertical ? pillThickness : pillLength) : 0
+    height: shown ? (vertical ? pillLength : pillThickness) : 0
     implicitWidth: width
     implicitHeight: height
-
-    Layout.fillWidth: vertical && shown
-    Layout.fillHeight: !vertical && shown
-    Layout.preferredWidth: width
-    Layout.preferredHeight: height
 
     Behavior on opacity {
         NumberAnimation {
@@ -82,6 +78,8 @@ Item {
             id: labelItem
             anchors.centerIn: parent
             text: button.label
+            font.bold: button.active
+            font.pixelSize: Math.max(9, Math.round(button.pillThickness * 0.55))
             color: button.active ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.textColor
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter

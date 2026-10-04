@@ -20,6 +20,22 @@ PlasmoidItem {
 
     preferredRepresentation: fullRepresentation
 
+    // Thickness of the containing panel (height for horizontal, width for vertical)
+    readonly property real panelThickness: vertical ? width : height
+
+    // Forward size and constraints to the panel containment layout
+    Layout.fillWidth: vertical
+    Layout.fillHeight: !vertical
+    Layout.minimumWidth: vertical ? -1 : implicitWidth
+    Layout.preferredWidth: vertical ? -1 : implicitWidth
+    Layout.maximumWidth: vertical ? -1 : implicitWidth
+    Layout.minimumHeight: vertical ? implicitHeight : -1
+    Layout.preferredHeight: vertical ? implicitHeight : -1
+    Layout.maximumHeight: vertical ? implicitHeight : -1
+
+    implicitWidth: fullRepresentationItem ? fullRepresentationItem.implicitWidth : 0
+    implicitHeight: fullRepresentationItem ? fullRepresentationItem.implicitHeight : 0
+
     TaskManager.VirtualDesktopInfo {
         id: desktopInfo
     }
@@ -28,10 +44,7 @@ PlasmoidItem {
         id: activityInfo
     }
 
-    // VirtualDesktopInfo::requestActivate() is not invokable from QML and the
-    // pager's private module is not importable by third-party applets, so the
-    // switch goes through KWin's D-Bus API. Positions are 1-based and the call
-    // works on both Wayland and X11.
+    // Positions are 1-based and the call works on both Wayland and X11.
     function activateDesktop(position: int) {
         DBus.SessionBus.asyncCall({
             "service": "org.kde.KWin",
@@ -39,64 +52,98 @@ PlasmoidItem {
             "interface": "org.kde.KWin",
             "member": "setCurrentDesktop",
             "arguments": [new DBus.int32(position)],
-            "signature": "(i)"
+            "signature": "i"
         });
     }
 
-    fullRepresentation: Flow {
-        id: bar
+    function nextDesktop() {
+        DBus.SessionBus.asyncCall({
+            "service": "org.kde.KWin",
+            "path": "/KWin",
+            "interface": "org.kde.KWin",
+            "member": "nextDesktop"
+        });
+    }
 
-        flow: root.vertical ? Flow.TopToBottom : Flow.LeftToRight
-        spacing: Kirigami.Units.smallSpacing
+    function previousDesktop() {
+        DBus.SessionBus.asyncCall({
+            "service": "org.kde.KWin",
+            "path": "/KWin",
+            "interface": "org.kde.KWin",
+            "member": "previousDesktop"
+        });
+    }
 
-        // Size to content along the panel so the widget grows/shrinks with the list.
-        Layout.minimumWidth: root.vertical ? -1 : implicitWidth
-        Layout.preferredWidth: root.vertical ? -1 : implicitWidth
-        Layout.maximumWidth: root.vertical ? Infinity : implicitWidth
-        Layout.minimumHeight: root.vertical ? implicitHeight : -1
-        Layout.preferredHeight: root.vertical ? implicitHeight : -1
-        Layout.maximumHeight: root.vertical ? implicitHeight : Infinity
+    fullRepresentation: Item {
+        id: barContainer
 
-        move: Transition {
-            NumberAnimation {
-                properties: "x,y"
-                duration: Kirigami.Units.shortDuration
-                easing.type: Easing.InOutQuad
+        implicitWidth: barGrid.implicitWidth
+        implicitHeight: barGrid.implicitHeight
+        width: implicitWidth
+        height: implicitHeight
+
+        WheelHandler {
+            orientation: Qt.Vertical
+            onWheel: (event) => {
+                if (event.angleDelta.y < 0) {
+                    root.nextDesktop();
+                } else if (event.angleDelta.y > 0) {
+                    root.previousDesktop();
+                }
             }
         }
 
-        // One delegate per desktop. Hidden delegates take no space in the layout,
-        // and each one only re-evaluates when its own state changes.
-        Repeater {
-            model: desktopInfo.desktopIds
+        // Grid with 1 row (horizontal) or 1 column (vertical) ensures items never wrap
+        // onto a clipped second row, and items with visible: false are automatically ignored.
+        Grid {
+            id: barGrid
 
-            WorkspaceButton {
-                id: workspace
+            rows: root.vertical ? -1 : 1
+            columns: root.vertical ? 1 : -1
+            spacing: Kirigami.Units.smallSpacing
 
-                required property var modelData
-                required property int index
+            anchors.centerIn: parent
 
-                readonly property bool persistent: index < Plasmoid.configuration.persistentWorkspaces
-
-                vertical: root.vertical
-                label: String(index + 1)
-                desktopName: desktopInfo.desktopNames[index] ?? label
-                active: modelData === desktopInfo.currentDesktop
-                occupied: occupancy.occupied
-                shown: active || occupied || persistent
-
-                onActivated: {
-                    if (!active) {
-                        root.activateDesktop(index + 1);
-                    }
+            move: Transition {
+                NumberAnimation {
+                    properties: "x,y"
+                    duration: Kirigami.Units.shortDuration
+                    easing.type: Easing.InOutQuad
                 }
+            }
 
-                DesktopOccupancy {
-                    id: occupancy
-                    desktopId: workspace.modelData
-                    activity: activityInfo.currentActivity
-                    filterByScreen: Plasmoid.configuration.filterByScreen && root.screenGeometry.width > 0
-                    screenGeometry: root.screenGeometry
+            Repeater {
+                model: desktopInfo.desktopIds
+
+                WorkspaceButton {
+                    id: workspace
+
+                    required property var modelData
+                    required property int index
+
+                    readonly property bool persistent: index < Plasmoid.configuration.persistentWorkspaces
+
+                    vertical: root.vertical
+                    panelThickness: root.panelThickness
+                    label: String(index + 1)
+                    desktopName: desktopInfo.desktopNames[index] ?? label
+                    active: String(modelData) === String(desktopInfo.currentDesktop)
+                    occupied: occupancy.occupied
+                    shown: active || occupied || persistent
+
+                    onActivated: {
+                        if (!active) {
+                            root.activateDesktop(index + 1);
+                        }
+                    }
+
+                    DesktopOccupancy {
+                        id: occupancy
+                        desktopId: workspace.modelData
+                        activity: activityInfo.currentActivity
+                        filterByScreen: Plasmoid.configuration.filterByScreen && root.screenGeometry.width > 0
+                        screenGeometry: root.screenGeometry
+                    }
                 }
             }
         }

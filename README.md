@@ -108,8 +108,20 @@ Os arquivos serão instalados em `~/.local/share/plasma/plasmoids/com.github.ent
 
 ### Desinstalar
 
+#### Desinstalação Automática
+Para remover o widget, o script KWin e restaurar os atalhos originais da barra de tarefas:
+
 ```bash
+./uninstall.sh
+```
+
+#### Desinstalação Manual
+```bash
+# Remover widget
 kpackagetool6 -t Plasma/Applet --remove com.github.enthony.dynamicworkspaces
+
+# Remover script KWin
+kpackagetool6 -t KWin/Script --remove com.github.enthony.followwindow
 ```
 
 ---
@@ -131,7 +143,7 @@ plasmawindowed com.github.enthony.dynamicworkspaces
 3. Pressione `Meta+2` (ou use os atalhos `Win+1..0`): o botão `[2]` aparecerá em destaque e o `[1]` ficará esmaecido.
 4. Pressione `Meta+3`: o botão `[2]` desaparecerá automaticamente e o `[3]` estará ativo.
 5. Abra uma janela no Desktop 2 (ex.: terminal ou editor de texto) e volte para o Desktop 1 ou 3: o botão `[2]` permanecerá visível indicando que há janelas ativas naquele desktop.
-6. Pressione `Win+Shift+n` (onde `n` é de 1 a 0, correspondendo aos desktops 1 a 10) com uma janela focada para movê-la para a workspace desejada.
+6. Pressione `Win+Shift+n` (onde `n` é de 1 a 0, correspondendo aos desktops 1 a 10) com uma janela focada para movê-la para a workspace desejada e segui-la automaticamente.
 7. Clique diretamente em qualquer botão do widget com o mouse para trocar de desktop.
 
 ---
@@ -144,3 +156,9 @@ plasmawindowed com.github.enthony.dynamicworkspaces
    - O widget exibe dinamicamente as workspaces que já existem no KWin (criadas pelo usuário ou padrão do sistema). Ele não deleta nem recria desktops virtuais no arquivo de configuração do sistema a cada fechamento de janela para evitar poluição no `kwinrc` e perda de atalhos globais de teclado (Meta+1, Meta+2, etc.).
 3. **Janelas presentes em todos os desktops**:
    - Janelas marcadas como "Visível em todos os desktops virtuais" são filtradas intencionalmente para não forçar todas as workspaces a ficarem visíveis o tempo todo.
+
+---
+
+## Licença
+
+Distribuído sob a licença **GNU General Public License v2.0 ou posterior**. Consulte o arquivo [LICENSE](LICENSE) para obter o texto completo da licença.

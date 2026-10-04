@@ -7,12 +7,14 @@
                 "Name": "Enthony Araujo de Oliveira"
             }
         ],
-        "Description": "Alterna automaticamente para o desktop de destino ao mover a janela ativa (estilo Hyprland movetoworkspace)",
+        "Description": "Automatically switches to target workspace when moving active window (Hyprland movetoworkspace style)",
+        "Description[pt_BR]": "Alterna automaticamente para o desktop de destino ao mover a janela ativa (estilo Hyprland movetoworkspace)",
         "Icon": "preferences-system-windows",
         "Id": "com.github.enthony.followwindow",
         "License": "GPL-2.0-or-later",
         "Name": "Follow Window to Workspace",
-        "Version": "1.0"
+        "Name[pt_BR]": "Acompanhar Janela para Workspace",
+        "Version": "1.0.0"
     },
     "X-Plasma-API": "javascript",
     "X-Plasma-MainScript": "contents/code/main.js"

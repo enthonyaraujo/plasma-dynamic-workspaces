@@ -19,6 +19,7 @@ PlasmoidItem {
                                                                  : Qt.rect(0, 0, 0, 0)
 
     preferredRepresentation: fullRepresentation
+    compactRepresentation: fullRepresentation
 
     // Thickness of the containing panel (height for horizontal, width for vertical)
     readonly property real panelThickness: vertical ? width : height
@@ -33,8 +34,8 @@ PlasmoidItem {
     Layout.preferredHeight: vertical ? implicitHeight : -1
     Layout.maximumHeight: vertical ? implicitHeight : -1
 
-    implicitWidth: fullRepresentationItem ? fullRepresentationItem.implicitWidth : 0
-    implicitHeight: fullRepresentationItem ? fullRepresentationItem.implicitHeight : 0
+    implicitWidth: Math.max(Kirigami.Units.gridUnit, fullRepresentationItem?.implicitWidth ?? (compactRepresentationItem?.implicitWidth ?? Kirigami.Units.gridUnit * 1.5))
+    implicitHeight: Math.max(Kirigami.Units.gridUnit, fullRepresentationItem?.implicitHeight ?? (compactRepresentationItem?.implicitHeight ?? Kirigami.Units.gridUnit * 1.5))
 
     TaskManager.VirtualDesktopInfo {
         id: desktopInfo
@@ -121,7 +122,7 @@ PlasmoidItem {
                     required property var modelData
                     required property int index
 
-                    readonly property bool persistent: index < Plasmoid.configuration.persistentWorkspaces
+                    readonly property bool persistent: index === 0 || index < (Plasmoid.configuration.persistentWorkspaces ?? 1)
 
                     vertical: root.vertical
                     panelThickness: root.panelThickness

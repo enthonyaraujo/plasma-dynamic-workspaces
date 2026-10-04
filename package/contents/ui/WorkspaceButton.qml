@@ -27,14 +27,14 @@ Item {
     signal activated()
 
     // Opacity levels: active > inactive with windows > persistent but empty.
-    readonly property real targetOpacity: active ? 1.0 : (occupied ? 0.7 : 0.4)
+    readonly property real targetOpacity: active ? 1.0 : (occupied ? 0.8 : 0.5)
 
     // Calculate pill thickness from the panel thickness with safety margins.
     // For a 24px panel, pillThickness is 20px, leaving 2px top/bottom margin.
     readonly property real effectivePanelThickness: panelThickness > 0 ? panelThickness : (vertical ? width : height)
     readonly property real safePanelThickness: effectivePanelThickness > 0 ? effectivePanelThickness : Kirigami.Units.gridUnit * 1.5
     readonly property real pillThickness: Math.max(16, Math.min(safePanelThickness - 4, Kirigami.Units.gridUnit * 1.5))
-    readonly property real pillLength: Math.max(pillThickness, labelItem.implicitWidth + 2 * Kirigami.Units.smallSpacing)
+    readonly property real pillLength: Math.max(pillThickness + 4, labelItem.implicitWidth + 2 * Kirigami.Units.smallSpacing + 6)
 
     visible: shown
     opacity: shown ? (mouseArea.containsMouse && !active ? Math.min(1.0, targetOpacity + 0.25) : targetOpacity) : 0
@@ -61,12 +61,18 @@ Item {
         anchors.centerIn: parent
         width: button.vertical ? button.pillThickness : button.pillLength
         height: button.vertical ? button.pillLength : button.pillThickness
-        radius: Math.min(width, height) / 2
+        radius: Math.round(Math.min(width, height) * 0.28)
 
         color: button.active ? Kirigami.Theme.highlightColor
              : mouseArea.containsMouse ? Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g,
-                                                 Kirigami.Theme.textColor.b, 0.15)
-             : "transparent"
+                                                 Kirigami.Theme.textColor.b, 0.22)
+             : Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g,
+                       Kirigami.Theme.textColor.b, button.occupied ? 0.16 : 0.08)
+
+        border.color: button.active ? Kirigami.Theme.highlightColor
+             : Qt.rgba(Kirigami.Theme.textColor.r, Kirigami.Theme.textColor.g,
+                       Kirigami.Theme.textColor.b, button.occupied ? 0.35 : 0.2)
+        border.width: 1
 
         Behavior on color {
             ColorAnimation {
@@ -79,7 +85,7 @@ Item {
             anchors.centerIn: parent
             text: button.label
             font.bold: button.active
-            font.pixelSize: Math.max(9, Math.round(button.pillThickness * 0.55))
+            font.pixelSize: Math.max(9, Math.round(button.pillThickness * 0.52))
             color: button.active ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.textColor
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter

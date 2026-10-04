@@ -1,6 +1,11 @@
-# Dynamic Workspaces (Plasmoid para KDE Plasma 6)
+# Plasma Dynamic Workspaces
 
-Widget (plasmoid) para o KDE Plasma 6 que replica o comportamento de workspaces dinâmicas do **Hyprland**: exibe apenas as workspaces que estão ativas ou que contêm janelas abertas, recolhendo e expandindo a lista automaticamente conforme o uso.
+Widget (plasmoid) e script KWin para o **KDE Plasma 6** que trazem o comportamento de workspaces dinâmicas e navegação estilo **Hyprland**:
+- Exibe dinamicamente apenas a workspace ativa e aquelas que contêm janelas abertas.
+- Navegação direta entre até 10 workspaces com atalhos de teclado (`Win+1..0`).
+- Mover janela ativa e acompanhar o foco automaticamente para a nova workspace (`Win+Shift+1..0`, estilo `movetoworkspace`).
+- Alternar diretamente de workspace clicando com o mouse em qualquer pílula do indicador.
+- Script de instalação e configuração automatizado para Wayland e teclados ABNT2/US.
 
 ---
 
@@ -44,7 +49,7 @@ O suporte nativo a workspaces totalmente independentes por monitor (*per-output 
 ## Estrutura do Código
 
 ```text
-kde-workspace/
+plasma-dynamic-workspaces/
 ├── package/                          # Plasmoid (Widget para o Painel do Plasma 6)
 │   ├── metadata.json                 # Metadados do Plasmoid (Plasma 6, Applet)
 │   └── contents/

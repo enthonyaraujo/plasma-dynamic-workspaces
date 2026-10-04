@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Script de instalação do Dynamic Workspaces e configuração de atalhos Hyprland-style no KDE Plasma 6.
+# Script de instalação do Dynamic Workspaces e configuração de atalhos no KDE Plasma 6.
 
 set -euo pipefail
 

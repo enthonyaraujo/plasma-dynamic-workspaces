@@ -5,7 +5,9 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGE_DIR="$SCRIPT_DIR/package"
+KWIN_SCRIPT_DIR="$SCRIPT_DIR/kwin-script"
 APPLET_ID="com.github.enthony.dynamicworkspaces"
+KWIN_SCRIPT_ID="com.github.enthony.followwindow"
 
 echo "=========================================="
 echo "  Instalação do Dynamic Workspaces (Plasma 6)"
@@ -13,7 +15,7 @@ echo "=========================================="
 
 # 1. Instalação / Atualização do Plasmoid
 echo ""
-echo "[1/5] Instalando widget no perfil do usuário..."
+echo "[1/6] Instalando widget no perfil do usuário..."
 if kpackagetool6 -t Plasma/Applet --list 2>/dev/null | grep -q "$APPLET_ID"; then
     echo "  -> Plasmoid já detectado. Atualizando (--upgrade)..."
     kpackagetool6 -t Plasma/Applet --upgrade "$PACKAGE_DIR"
@@ -23,9 +25,22 @@ else
 fi
 echo "  -> Widget instalado com sucesso!"
 
-# 2. Garantir Desktops Virtuais no KWin
+# 2. Instalação / Atualização do Script KWin (Follow Window ao mover workspace)
 echo ""
-echo "[2/5] Verificando desktops virtuais no KWin..."
+echo "[2/6] Instalando script KWin (acompanhar janela ao mover de workspace)..."
+if kpackagetool6 -t KWin/Script --list 2>/dev/null | grep -q "$KWIN_SCRIPT_ID"; then
+    echo "  -> Script KWin já detectado. Atualizando (--upgrade)..."
+    kpackagetool6 -t KWin/Script --upgrade "$KWIN_SCRIPT_DIR"
+else
+    echo "  -> Instalando novo script KWin (--install)..."
+    kpackagetool6 -t KWin/Script --install "$KWIN_SCRIPT_DIR"
+fi
+kwriteconfig6 --file kwinrc --group Plugins --key "${KWIN_SCRIPT_ID}Enabled" "true"
+echo "  -> Script KWin instalado e ativado com sucesso!"
+
+# 3. Garantir Desktops Virtuais no KWin
+echo ""
+echo "[3/6] Verificando desktops virtuais no KWin..."
 python3 - <<'EOF'
 import subprocess
 try:
@@ -41,26 +56,26 @@ except Exception as e:
     print("  -> Aviso ao verificar desktops virtuais:", e)
 EOF
 
-# 3. Configuração de Atalhos (Estilo Hyprland)
+# 4. Configuração de Atalhos (Estilo Hyprland)
 echo ""
-echo "[3/5] Configurando atalhos de teclado (Win+1..0 e Win+Shift+1..0)..."
+echo "[4/6] Configurando atalhos de teclado (Win+1..0 e Win+Shift+1..0)..."
 
-# 3.1 Desativa os atalhos Win+1..0 da barra de tarefas (plasmashell)
+# 4.1 Desativa os atalhos Win+1..0 da barra de tarefas (plasmashell)
 echo "  -> Liberando atalhos Win+1..0 da barra de tarefas..."
 for i in {1..10}; do
     kwriteconfig6 --file kglobalshortcutsrc --group plasmashell --key "activate task manager entry $i" "none,none,Activate Task Manager Entry $i"
 done
 
-# 3.2 Associa Win+1..0 para alternar workspaces no KWin
+# 4.2 Associa Win+1..0 para alternar workspaces no KWin
 echo "  -> Mapeando Win+1..0 para alternar workspaces no KWin..."
 for i in {1..10}; do
     num=$(( i == 10 ? 0 : i ))
     kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Switch to Desktop $i" "Meta+$num,none,Switch to Desktop $i"
 done
 
-# 4. Aplicar / Recarregar configurações imediatamente na sessão ativa
+# 5. Aplicar / Recarregar configurações imediatamente na sessão ativa
 echo ""
-echo "[4/5] Aplicando atalhos em tempo real no KWin/Plasma..."
+echo "[5/6] Aplicando atalhos em tempo real no KWin/Plasma..."
 python3 - <<'EOF'
 import subprocess
 import gi
@@ -91,7 +106,7 @@ for i in range(1, 11):
     num = symbols_data[i]["num"]
 
     # Desativa atalho do task manager
-    action_plasma = ['plasmashell', f'activate task manager entry {i}', 'plasmashell', f'Activate Task Manager Entry {i}']
+    action_plasma = ['plasmashell', f'activate task manager entry {i}', 'plasmashell', f'Activate Task Entry {i}']
     bus.call_sync(
         'org.kde.kglobalaccel',
         '/kglobalaccel',
@@ -154,9 +169,9 @@ for i in range(1, 11):
     subprocess.run(['kwriteconfig6', '--file', 'kglobalshortcutsrc', '--group', 'kwin', '--key', f'Window to Desktop {i}', shortcut_str])
 EOF
 
-# 5. Reiniciar o Plasmashell para recarregar o widget atualizado na barra
+# 6. Reiniciar o Plasmashell para recarregar o widget atualizado na barra e recarregar o KWin
 echo ""
-echo "[5/5] Reiniciando painéis do Plasma para carregar as alterações..."
+echo "[6/6] Reiniciando painéis do Plasma e recarregando o KWin..."
 if systemctl --user is-active --quiet plasma-plasmashell.service; then
     systemctl --user restart plasma-plasmashell.service
     echo "  -> Plasmashell reiniciado com sucesso via systemd."
@@ -166,9 +181,10 @@ else
     echo "  -> Plasmashell reiniciado."
 fi
 
-# Reconfigurar KWin para assegurar que atalhos e regras sejam aplicados
+# Reconfigurar KWin para assegurar que scripts, atalhos e regras sejam aplicados
 if command -v qdbus-qt6 >/dev/null 2>&1; then
     qdbus-qt6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
+    echo "  -> KWin reconfigurado com sucesso."
 fi
 
 echo ""
@@ -178,5 +194,5 @@ echo "=========================================="
 echo ""
 echo "Próximos passos:"
 echo "1. Se o widget já estava no painel superior, ele foi recarregado e agora se ajusta perfeitamente à barra (sem cortes)."
-echo "2. Pressione Win+1..9 e Win+0 para testar a troca de workspaces no indicador (1 a 10)!"
-echo "3. Pressione Win+Shift+1..9 e Win+Shift+0 para mover a janela ativa para outra workspace!"
+echo "2. Pressione Win+1..9 e Win+0 para alternar entre as 10 workspaces."
+echo "3. Pressione Win+Shift+1..9 e Win+Shift+0 com uma janela ativa para movê-la e segui-la automaticamente para a nova workspace!"

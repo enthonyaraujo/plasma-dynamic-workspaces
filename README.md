@@ -20,6 +20,7 @@ Widget (plasmoid) para o KDE Plasma 6 que replica o comportamento de workspaces 
 3. **Interação**:
    - Clique em qualquer workspace para alternar para ela imediatamente (via D-Bus do KWin).
    - Tooltips com o nome real de cada desktop virtual configurado no Plasma.
+   - **Acompanhar janela ao mover (Estilo Hyprland `movetoworkspace`)**: ao usar `Win+Shift+1..0`, a janela ativa é movida para a workspace escolhida e a visualização do desktop segue imediatamente junto com ela.
 4. **Desempenho Reativo (Zero Polling)**:
    - Não utiliza timers nem loops de verificação.
    - Usa diretamente os modelos reativos `org.kde.taskmanager` (`VirtualDesktopInfo`, `ActivityInfo`, `TasksModel`) e `org.kde.kitemmodels` (`KSortFilterProxyModel`).
@@ -44,7 +45,7 @@ O suporte nativo a workspaces totalmente independentes por monitor (*per-output 
 
 ```text
 kde-workspace/
-├── package/
+├── package/                          # Plasmoid (Widget para o Painel do Plasma 6)
 │   ├── metadata.json                 # Metadados do Plasmoid (Plasma 6, Applet)
 │   └── contents/
 │       ├── config/
@@ -55,6 +56,11 @@ kde-workspace/
 │           ├── DesktopOccupancy.qml  # Modelo reativo de ocupação por workspace (TasksModel)
 │           ├── WorkspaceButton.qml   # Componente visual da pílula / botão de workspace
 │           └── configGeneral.qml     # Interface de preferências gerais
+├── kwin-script/                      # Script do KWin 6 (movetoworkspace & follow)
+│   ├── metadata.json                 # Metadados do KWin Script
+│   └── contents/
+│       └── code/
+│           └── main.js               # Handler que segue a janela ativa ao mudar de desktop
 └── README.md
 ```
 
@@ -64,7 +70,7 @@ kde-workspace/
 
 ### Instalação Rápida (Script Automatizado)
 
-Você pode instalar o widget e configurar automaticamente os atalhos `Win+1..0` (alternar workspace) e `Win+Shift+1..0` (mover janela ativa) para até 10 workspaces executando o script incluído:
+Você pode instalar o widget e configurar automaticamente os atalhos `Win+1..0` (alternar workspace) e `Win+Shift+1..0` (mover janela ativa e acompanhá-la) para até 10 workspaces executando o script incluído:
 
 ```bash
 ./install.sh
@@ -72,11 +78,12 @@ Você pode instalar o widget e configurar automaticamente os atalhos `Win+1..0` 
 
 O script:
 1. Instala (ou atualiza) o widget no perfil do usuário (`~/.local/share/plasma/plasmoids/`).
-2. Garante a criação de até 10 desktops virtuais no KWin.
-3. Libera os atalhos `Win+1..0` da barra de tarefas do Plasma.
-4. Atribui `Win+1..9` e `Win+0` para alternar diretamente entre as 10 workspaces.
-5. Atribui `Win+Shift+1..9` e `Win+Shift+0` para mover a janela ativa para qualquer uma das 10 workspaces.
-6. Aplica as configurações em tempo real na sessão ativa via D-Bus e reinicia o Plasmashell.
+2. Instala e ativa o script KWin que acompanha a janela ativa para o desktop de destino (`~/.local/share/kwin/scripts/`).
+3. Garante a criação de até 10 desktops virtuais no KWin.
+4. Libera os atalhos `Win+1..0` da barra de tarefas do Plasma.
+5. Atribui `Win+1..9` e `Win+0` para alternar diretamente entre as 10 workspaces.
+6. Atribui `Win+Shift+1..9` e `Win+Shift+0` para mover a janela ativa para qualquer uma das 10 workspaces (com suporte completo a Wayland e layouts US/ABNT2).
+7. Aplica as configurações em tempo real na sessão ativa via D-Bus e reinicia o Plasmashell.
 
 ---
 

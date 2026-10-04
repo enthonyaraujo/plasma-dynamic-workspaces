@@ -1,0 +1,19 @@
+{
+    "KPackageStructure": "KWin/Script",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "enthonyaraujo01@gmail.com",
+                "Name": "Enthony Araujo de Oliveira"
+            }
+        ],
+        "Description": "Alterna automaticamente para o desktop de destino ao mover a janela ativa (estilo Hyprland movetoworkspace)",
+        "Icon": "preferences-system-windows",
+        "Id": "com.github.enthony.followwindow",
+        "License": "GPL-2.0-or-later",
+        "Name": "Follow Window to Workspace",
+        "Version": "1.0"
+    },
+    "X-Plasma-API": "javascript",
+    "X-Plasma-MainScript": "contents/code/main.js"
+}

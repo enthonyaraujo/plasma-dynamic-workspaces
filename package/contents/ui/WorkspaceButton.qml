@@ -93,17 +93,19 @@ Item {
         }
     }
 
-    PlasmaCore.ToolTipArea {
+    MouseArea {
+        id: mouseArea
         anchors.fill: parent
-        mainText: button.desktopName
-        subText: button.active ? i18n("Current workspace") : ""
+        hoverEnabled: true
+        acceptedButtons: Qt.LeftButton
+        cursorShape: Qt.PointingHandCursor
+        onClicked: button.activated()
 
-        MouseArea {
-            id: mouseArea
+        PlasmaCore.ToolTipArea {
             anchors.fill: parent
-            hoverEnabled: true
-            acceptedButtons: Qt.LeftButton
-            onClicked: button.activated()
+            mainText: button.desktopName
+            subText: button.active ? i18n("Current workspace") : ""
+            interactive: false
         }
     }
 }

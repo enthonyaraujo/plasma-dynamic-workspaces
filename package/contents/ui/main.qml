@@ -46,21 +46,35 @@ PlasmoidItem {
     }
 
     // Positions are 1-based and the call works on both Wayland and X11.
-    function activateDesktop(position: int) {
+    function activateDesktop(position: int, desktopId: string) {
         DBus.SessionBus.asyncCall({
             "service": "org.kde.KWin",
             "path": "/KWin",
+            "iface": "org.kde.KWin",
             "interface": "org.kde.KWin",
             "member": "setCurrentDesktop",
             "arguments": [new DBus.int32(position)],
             "signature": "i"
         });
+
+        if (desktopId && desktopId.length > 0) {
+            DBus.SessionBus.asyncCall({
+                "service": "org.kde.KWin",
+                "path": "/VirtualDesktopManager",
+                "iface": "org.freedesktop.DBus.Properties",
+                "interface": "org.freedesktop.DBus.Properties",
+                "member": "Set",
+                "arguments": ["org.kde.KWin.VirtualDesktopManager", "current", new DBus.variant(desktopId)],
+                "signature": "ssv"
+            });
+        }
     }
 
     function nextDesktop() {
         DBus.SessionBus.asyncCall({
             "service": "org.kde.KWin",
             "path": "/KWin",
+            "iface": "org.kde.KWin",
             "interface": "org.kde.KWin",
             "member": "nextDesktop"
         });
@@ -70,6 +84,7 @@ PlasmoidItem {
         DBus.SessionBus.asyncCall({
             "service": "org.kde.KWin",
             "path": "/KWin",
+            "iface": "org.kde.KWin",
             "interface": "org.kde.KWin",
             "member": "previousDesktop"
         });
@@ -134,7 +149,7 @@ PlasmoidItem {
 
                     onActivated: {
                         if (!active) {
-                            root.activateDesktop(index + 1);
+                            root.activateDesktop(index + 1, String(modelData));
                         }
                     }
 

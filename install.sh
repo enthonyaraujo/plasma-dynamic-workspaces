@@ -39,15 +39,47 @@ for i in {1..9}; do
     kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Switch to Desktop $i" "Meta+$i,none,Switch to Desktop $i"
 done
 
-# 3. Aplicar / Recarregar configurações
+# 3. Aplicar / Recarregar configurações imediatamente na sessão ativa
 echo ""
-echo "[3/3] Recarregando atalhos no Plasma e KWin..."
-systemctl --user restart plasma-kglobalaccel.service 2>/dev/null || true
-if command -v qdbus-qt6 >/dev/null 2>&1; then
-    qdbus-qt6 org.kde.KWin /KWin reconfigure 2>/dev/null || true
-elif command -v qdbus >/dev/null 2>&1; then
-    qdbus org.kde.KWin /KWin reconfigure 2>/dev/null || true
-fi
+echo "[3/3] Aplicando atalhos em tempo real no KWin/Plasma..."
+python3 - <<'EOF'
+import gi
+from gi.repository import Gio, GLib
+
+bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+META = 0x10000000
+KEY_0 = 0x30
+
+for i in range(1, 10):
+    # Desativa atalho do task manager
+    action_plasma = ['plasmashell', f'activate task manager entry {i}', 'plasmashell', f'Activate Task Manager Entry {i}']
+    bus.call_sync(
+        'org.kde.kglobalaccel',
+        '/kglobalaccel',
+        'org.kde.KGlobalAccel',
+        'setShortcutKeys',
+        GLib.Variant('(asa(ai)u)', (action_plasma, [], 4)),
+        GLib.VariantType('(a(ai))'),
+        Gio.DBusCallFlags.NONE,
+        -1,
+        None
+    )
+
+    # Atribui Win+i para trocar de desktop no KWin
+    key_code = META | (KEY_0 + i)
+    action_kwin = ['kwin', f'Switch to Desktop {i}', 'KWin', f'Switch to Desktop {i}']
+    bus.call_sync(
+        'org.kde.kglobalaccel',
+        '/kglobalaccel',
+        'org.kde.KGlobalAccel',
+        'setShortcutKeys',
+        GLib.Variant('(asa(ai)u)', (action_kwin, [([key_code],)], 4)),
+        GLib.VariantType('(a(ai))'),
+        Gio.DBusCallFlags.NONE,
+        -1,
+        None
+    )
+EOF
 
 echo ""
 echo "=========================================="

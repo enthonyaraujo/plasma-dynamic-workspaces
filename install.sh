@@ -13,7 +13,7 @@ echo "=========================================="
 
 # 1. Instalação / Atualização do Plasmoid
 echo ""
-echo "[1/3] Instalando widget no perfil do usuário..."
+echo "[1/4] Instalando widget no perfil do usuário..."
 if kpackagetool6 -t Plasma/Applet --list 2>/dev/null | grep -q "$APPLET_ID"; then
     echo "  -> Plasmoid já detectado. Atualizando (--upgrade)..."
     kpackagetool6 -t Plasma/Applet --upgrade "$PACKAGE_DIR"

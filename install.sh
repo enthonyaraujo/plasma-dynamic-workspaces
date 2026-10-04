@@ -23,9 +23,27 @@ else
 fi
 echo "  -> Widget instalado com sucesso!"
 
-# 2. Configuração de Atalhos (Estilo Hyprland)
+# 2. Garantir Desktops Virtuais no KWin
 echo ""
-echo "[2/3] Configurando atalhos de teclado (Win+1..9)..."
+echo "[2/4] Verificando desktops virtuais no KWin..."
+python3 - <<'EOF'
+import subprocess
+try:
+    cmd = ['qdbus-qt6', 'org.kde.KWin', '/VirtualDesktopManager', 'org.kde.KWin.VirtualDesktopManager.count']
+    count = int(subprocess.check_output(cmd).decode().strip())
+    if count < 5:
+        print(f"  -> Apenas {count} desktop(s) detectado(s). Criando até 5 desktops para navegação estilo Hyprland...")
+        for i in range(count, 5):
+            subprocess.run(['qdbus-qt6', 'org.kde.KWin', '/VirtualDesktopManager', 'org.kde.KWin.VirtualDesktopManager.createDesktop', str(i), f'Desktop {i+1}'])
+    else:
+        print(f"  -> {count} desktops virtuais detectados.")
+except Exception as e:
+    print("  -> Aviso ao verificar desktops virtuais:", e)
+EOF
+
+# 3. Configuração de Atalhos (Estilo Hyprland)
+echo ""
+echo "[3/4] Configurando atalhos de teclado (Win+1..9)..."
 
 # 2.1 Desativa os atalhos Win+1..9 da barra de tarefas (plasmashell)
 echo "  -> Liberando atalhos Win+1..9 da barra de tarefas..."
@@ -39,9 +57,9 @@ for i in {1..9}; do
     kwriteconfig6 --file kglobalshortcutsrc --group kwin --key "Switch to Desktop $i" "Meta+$i,none,Switch to Desktop $i"
 done
 
-# 3. Aplicar / Recarregar configurações imediatamente na sessão ativa
+# 4. Aplicar / Recarregar configurações imediatamente na sessão ativa
 echo ""
-echo "[3/3] Aplicando atalhos em tempo real no KWin/Plasma..."
+echo "[4/4] Aplicando atalhos em tempo real no KWin/Plasma..."
 python3 - <<'EOF'
 import gi
 from gi.repository import Gio, GLib
